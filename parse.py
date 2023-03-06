@@ -82,12 +82,10 @@ def parse_html(url):  # parse HTML
     poster_response = requests.get(
         MAIN_URL + poster_url, cookies=COOKIES, headers=HEADERS)
     poster_soup = BeautifulSoup(poster_response.content, 'html.parser')
-    poster = poster_soup.find(class_="sc-7c0a9e7c-0 fEIEer")['src']
+    poster = requests.get(poster_soup.find(class_="sc-7c0a9e7c-0 fEIEer")['src']).content
 
-    with open(f'{poster_dir}{basename(poster)}', 'wb') as file:
-        file.write(requests.get(poster).content)
-    
     # images
+    images = []
     images_dir = 'images/'
     images_url = soup.find(attrs={'data-testid': 'photos-title'}).find('a')['href']
     images_response = requests.get(
@@ -102,10 +100,7 @@ def parse_html(url):  # parse HTML
         )
         image_soup = BeautifulSoup(image_response.content, 'html.parser')
         image = image_soup.find(attrs={'data-testid': 'media-viewer'}).find('img')['src']
-
-        # print(f'{j}: {image}')
-        with open(f'{images_dir}{basename(image)}', 'wb') as file:
-          file.write(requests.get(image).content)
+        images.append(requests.get(image).content)
     
     # release date
     release_date = soup.find(attrs={'data-testid': 'title-details-section'}).find(class_='ipc-inline-list__item').find('a').text
@@ -114,4 +109,16 @@ def parse_html(url):  # parse HTML
     runtime = soup.find(attrs={'data-testid': 'title-techspecs-section'}).find(class_='ipc-metadata-list__item').find('div').text
 
 
-    return title, rating, genres, storyline, director, writers, stars, poster_dir, images_dir, release_date, runtime
+    return {
+        'title': title,
+        'poster': poster,
+        'rating': rating,
+        'genres': genres,
+        'director': director,
+        'writers': writers,
+        'stars': stars,
+        'release_date': release_date,
+        'runtime': runtime,
+        'storyline': storyline,
+        'images': images,
+        }
